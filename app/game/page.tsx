@@ -1,7 +1,7 @@
 'use client'
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { MessageCircle, Users, Vote, Award, Send, ChevronRight } from 'lucide-react';
+import { MessageCircle, Users, Vote, Award, Send, ChevronRight, Loader2 } from 'lucide-react';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 
 interface Player {
@@ -25,6 +25,8 @@ export default function Game() {
     { id: 4, isAI: true, name: 'AI 4' },
     { id: 5, isAI: false, name: 'You' },
   ]);
+  const [aiVotingComplete, setAiVotingComplete] = useState(false);
+  const [aiVotingInProgress, setAiVotingInProgress] = useState(false);
   const [readyForNextTurn, setReadyForNextTurn] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
   const [currentTurn, setCurrentTurn] = useState(1);
@@ -252,6 +254,8 @@ export default function Game() {
     }
     
     setAiVotes(votes);
+    setAiVotingInProgress(false);
+    setAiVotingComplete(true);
   };
 
   const handleHumanVote = (votedPlayer: number) => {
@@ -416,7 +420,7 @@ export default function Game() {
       {/* Input Section */}
       {isHumanAsking && !voting && (
         <div className="bg-white rounded-lg shadow-sm p-4 mb-6">
-          <h3 className="text-lg font-semibold text-slate-800 mb-3">Your Question</h3>
+          <h3 className="text-lg font-semibold text-slate-800 mb-3">Задайте вопрос первому игроку</h3>
           <div className="flex gap-2">
             <textarea
               value={humanQuestion}
@@ -478,29 +482,38 @@ export default function Game() {
           <div className="bg-white rounded-lg shadow-sm p-4">
             <div className="mb-6">
               <h3 className="text-lg font-semibold text-slate-800 mb-3">AI Votes</h3>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                {aiVotes.map((vote, index) => (
-                  <div key={index} className="p-3 rounded-lg bg-slate-50 text-slate-700">
-                    AI {index + 1} voted: Player {vote}
-                  </div>
-                ))}
-              </div>
+              {aiVotingInProgress ? (
+                <div className="flex items-center gap-2 p-4 bg-slate-50 rounded-lg">
+                  <Loader2 className="w-5 h-5 animate-spin text-blue-500" />
+                  <span className="text-slate-700">AI players are voting...</span>
+                </div>
+              ) : (
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                  {aiVotes.map((vote, index) => (
+                    <div key={index} className="p-3 rounded-lg bg-slate-50 text-slate-700">
+                      AI {index + 1} voted: Player {vote}
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
             
-            <div>
-              <h3 className="text-lg font-semibold text-slate-800 mb-3">Cast Your Vote</h3>
-              <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-                {players.map(player => (
-                  <button
-                    key={player.id}
-                    onClick={() => handleHumanVote(player.id)}
-                    className="p-3 rounded-lg bg-slate-50 hover:bg-slate-100 text-slate-700 transition-colors"
-                  >
-                    {player.name}
-                  </button>
-                ))}
+            {aiVotingComplete && (
+              <div>
+                <h3 className="text-lg font-semibold text-slate-800 mb-3">Cast Your Vote</h3>
+                <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+                  {players.map(player => (
+                    <button
+                      key={player.id}
+                      onClick={() => handleHumanVote(player.id)}
+                      className="p-3 rounded-lg bg-slate-50 hover:bg-slate-100 text-slate-700 transition-colors"
+                    >
+                      {player.name}
+                    </button>
+                  ))}
+                </div>
               </div>
-            </div>
+            )}
           </div>
         </div>
       )}
